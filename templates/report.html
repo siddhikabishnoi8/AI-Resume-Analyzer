@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATS Resume Analysis Report - {{ analysis.resume_name }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #2563EB;
+            --text-dark: #1E293B;
+            --text-muted: #64748B;
+            --border: #E2E8F0;
+            --success: #10B981;
+            --error: #EF4444;
+            --warning: #F59E0B;
+            --bg-light: #F8FAFC;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-dark);
+            line-height: 1.5;
+            margin: 0;
+            padding: 40px;
+            background-color: #ffffff;
+        }
+        
+        .print-btn-container {
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 20px;
+        }
+        
+        .btn {
+            background-color: var(--primary);
+            color: #white;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+        
+        .btn-secondary {
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            border: 1px solid var(--border);
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+        }
+        
+        .logo {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 24px;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .logo span {
+            color: var(--primary);
+        }
+        
+        .report-meta {
+            text-align: right;
+        }
+        
+        .report-meta p {
+            margin: 4px 0;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        
+        .score-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .score-circle-card {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            background-color: var(--bg-light);
+        }
+        
+        .score-value {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 64px;
+            color: var(--primary);
+            margin: 10px 0;
+            line-height: 1;
+        }
+        
+        .score-label {
+            font-weight: 600;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-dark);
+        }
+        
+        .breakdown-card {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 30px;
+        }
+        
+        .breakdown-card h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .breakdown-row {
+            margin-bottom: 15px;
+        }
+        
+        .breakdown-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+        
+        .breakdown-bar {
+            height: 8px;
+            background-color: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .breakdown-fill {
+            height: 100%;
+            background-color: var(--primary);
+            border-radius: 4px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            page-break-inside: avoid;
+        }
+        
+        .section h2 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 20px;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        
+        .overview-item {
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+        }
+        
+        .overview-item .label {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+            display: block;
+            text-transform: uppercase;
+        }
+        
+        .overview-item .value {
+            font-size: 15px;
+            font-weight: 600;
+        }
+        
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+        }
+        
+        .skill-list-box h4 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .skill-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 0;
+            list-style: none;
+        }
+        
+        .badge {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+        }
+        
+        .badge-success {
+            background-color: #ECFDF5;
+            color: #065F46;
+            border-color: #A7F3D0;
+        }
+        
+        .badge-danger {
+            background-color: #FEF2F2;
+            color: #991B1B;
+            border-color: #FCA5A5;
+        }
+        
+        .badge-warning {
+            background-color: #FFFBEB;
+            color: #92400E;
+            border-color: #FDE68A;
+        }
+        
+        .suggestions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .suggestion-item {
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            border-radius: 6px;
+            padding: 15px;
+            background-color: var(--bg-light);
+        }
+        
+        .suggestion-item h4 {
+            margin: 0 0 6px 0;
+            font-size: 15px;
+            font-weight: 700;
+        }
+        
+        .suggestion-item p {
+            margin: 0;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        
+        /* Print Styles Override */
+        @media print {
+            body {
+                padding: 0;
+            }
+            .print-btn-container {
+                display: none;
+            }
+            .score-circle-card, .suggestion-item {
+                background-color: #ffffff !important;
+                border: 1px solid var(--border) !important;
+            }
+            .badge-success {
+                background-color: #ffffff !important;
+                border: 1px solid var(--success) !important;
+                color: var(--success) !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .badge-danger {
+                background-color: #ffffff !important;
+                border: 1px solid var(--error) !important;
+                color: var(--error) !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .badge-warning {
+                background-color: #ffffff !important;
+                border: 1px solid var(--warning) !important;
+                color: var(--warning) !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .breakdown-fill {
+                background-color: var(--primary) !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="print-btn-container">
+        <a href="/dashboard" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</a>
+        <button onclick="window.print()" class="btn"><i class="fa-solid fa-print"></i> Save as PDF / Print</button>
+    </div>
+    
+    <div class="header">
+        <div class="logo">
+            <i class="fa-solid fa-brain-circuit"></i>
+            <span>Resume<span>AI</span></span>
+        </div>
+        <div class="report-meta">
+            <p><strong>Candidate:</strong> {{ extracted.name }}</p>
+            <p><strong>Job Title:</strong> {{ analysis.job_title }}</p>
+            <p><strong>Scan Date:</strong> {{ date_str }}</p>
+        </div>
+    </div>
+    
+    <div class="score-row">
+        <div class="score-circle-card">
+            <span class="score-label">ATS Optimization</span>
+            <div class="score-value">{{ analysis.ats_score }}%</div>
+            <p style="margin: 0; color: var(--text-muted); font-size: 13px; font-weight: 500;">Overall Match Index</p>
+        </div>
+        
+        <div class="breakdown-card">
+            <h3>Weighted Score Breakdown</h3>
+            
+            <div class="breakdown-row">
+                <div class="breakdown-info">
+                    <span>Skills Matching (40%)</span>
+                    <span>{{ analysis.skills_score }}%</span>
+                </div>
+                <div class="breakdown-bar">
+                    <div class="breakdown-fill" style="width: {{ analysis.skills_score }}%;"></div>
+                </div>
+            </div>
+            
+            <div class="breakdown-row">
+                <div class="breakdown-info">
+                    <span>Keywords Overlap (20%)</span>
+                    <span>{{ analysis.keywords_score }}%</span>
+                </div>
+                <div class="breakdown-bar">
+                    <div class="breakdown-fill" style="width: {{ analysis.keywords_score }}%;"></div>
+                </div>
+            </div>
+            
+            <div class="breakdown-row">
+                <div class="breakdown-info">
+                    <span>Experience Match (20%)</span>
+                    <span>{{ analysis.experience_score }}%</span>
+                </div>
+                <div class="breakdown-bar">
+                    <div class="breakdown-fill" style="width: {{ analysis.experience_score }}%;"></div>
+                </div>
+            </div>
+            
+            <div class="breakdown-row">
+                <div class="breakdown-info">
+                    <span>Education Check (10%)</span>
+                    <span>{{ analysis.education_score }}%</span>
+                </div>
+                <div class="breakdown-bar">
+                    <div class="breakdown-fill" style="width: {{ analysis.education_score }}%;"></div>
+                </div>
+            </div>
+            
+            <div class="breakdown-row">
+                <div class="breakdown-info">
+                    <span>Layout Formatting (10%)</span>
+                    <span>{{ analysis.formatting_score }}%</span>
+                </div>
+                <div class="breakdown-bar">
+                    <div class="breakdown-fill" style="width: {{ analysis.formatting_score }}%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Parsed CV Overview</h2>
+        <div class="overview-grid">
+            <div class="overview-item">
+                <span class="label">Candidate Name</span>
+                <span class="value">{{ extracted.name }}</span>
+            </div>
+            <div class="overview-item">
+                <span class="label">Email Address</span>
+                <span class="value">{{ extracted.email }}</span>
+            </div>
+            <div class="overview-item">
+                <span class="label">Phone Number</span>
+                <span class="value">{{ extracted.phone }}</span>
+            </div>
+            <div class="overview-item">
+                <span class="label">Experience Level</span>
+                <span class="value">{{ results.experience_details.candidate_years }} Years (Target Job requires {{ results.experience_details.required_years }} Years)</span>
+            </div>
+            <div class="overview-item">
+                <span class="label">Extracted Degree</span>
+                <span class="value">{{ results.education_details.candidate_degree }} (Target Job requires {{ results.education_details.required_degree }})</span>
+            </div>
+            <div class="overview-item">
+                <span class="label">GitHub Profile</span>
+                <span class="value">{{ extracted.github or 'Not Found' }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Skills Audit</h2>
+        <div class="skills-grid">
+            <div class="skill-list-box">
+                <h4 style="color: var(--success);"><i class="fa-solid fa-circle-check"></i> Matched Skills ({{ results.matched_skills|length }})</h4>
+                <ul class="skill-badges">
+                    {% for skill in results.matched_skills %}
+                        <li class="badge badge-success">{{ skill }}</li>
+                    {% else %}
+                        <li style="color: var(--text-muted); font-size: 13px;">No direct matches found.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <div class="skill-list-box">
+                <h4 style="color: var(--error);"><i class="fa-solid fa-circle-xmark"></i> Missing Core Skills ({{ results.missing_skills|length }})</h4>
+                <ul class="skill-badges">
+                    {% for skill in results.missing_skills %}
+                        <li class="badge badge-danger">{{ skill }}</li>
+                    {% else %}
+                        <li style="color: var(--success); font-size: 13px; font-weight: 500;">Perfect! No missing core skills detected.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>ATS Keywords Audit</h2>
+        <div class="skills-grid">
+            <div class="skill-list-box">
+                <h4>Matched Key Terms</h4>
+                <ul class="skill-badges">
+                    {% for kw in results.matched_keywords %}
+                        <li class="badge" style="background-color: #F1F5F9; color: var(--text-dark);">{{ kw }}</li>
+                    {% else %}
+                        <li style="color: var(--text-muted); font-size: 13px;">None</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <div class="skill-list-box">
+                <h4 style="color: var(--warning);">Missing Key Terms</h4>
+                <ul class="skill-badges">
+                    {% for kw in results.missing_keywords %}
+                        <li class="badge badge-warning">{{ kw }}</li>
+                    {% else %}
+                        <li style="color: var(--success); font-size: 13px;">None</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>ATS Suggested Enhancements</h2>
+        <div class="suggestions-list">
+            {% for sug in results.suggestions %}
+                <div class="suggestion-item">
+                    <h4>{{ sug.title }}</h4>
+                    <p>{{ sug.description }}</p>
+                </div>
+            {% else %}
+                <p style="color: var(--success); font-size: 14px; font-weight: 500;">No improvement recommendations. Your resume is highly optimized!</p>
+            {% endfor %}
+        </div>
+    </div>
+    
+</body>
+</html>

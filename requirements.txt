@@ -1,0 +1,11 @@
+Flask
+Flask-SQLAlchemy
+pymysql
+cryptography
+scikit-learn
+pandas
+numpy
+spacy
+nltk
+pdfplumber
+python-docx

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Resume Analyzer - ATS Score Optimization{% endblock %}</title>
+    
+    <!-- Meta tags for SEO -->
+    <meta name="description" content="Calculate your ATS resume score, identify missing keywords, match experience levels, and get custom recommendations with our AI-powered Resume Analyzer.">
+    <meta name="keywords" content="ATS score, resume analyzer, parser, resume feedback, job matching, careers, CV checker">
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- ChartJS library for Dashboard -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        // Check theme preference before rendering to prevent flashing
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+    
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <i class="fa-solid fa-brain-circuit nav-logo-icon"></i>
+                <span>Resume<span class="highlight">AI</span></span>
+            </a>
+            
+            <div class="nav-links">
+                <a href="/#features" class="nav-link">Features</a>
+                <a href="/#how-it-works" class="nav-link">How It Works</a>
+                <a href="/#faq" class="nav-link">FAQ</a>
+                
+                {% if g.user %}
+                    <a href="/dashboard" class="nav-btn btn-primary">Go to Dashboard</a>
+                    <a href="/api/auth/logout" class="nav-link">Logout</a>
+                {% else %}
+                    <a href="/login" class="nav-link">Login</a>
+                    <a href="/register" class="nav-btn btn-primary">Sign Up</a>
+                {% endif %}
+                
+                <!-- Dark Mode Toggle Button -->
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <i class="fa-solid fa-moon moon-icon"></i>
+                    <i class="fa-solid fa-sun sun-icon"></i>
+                </button>
+            </div>
+            
+            <button id="mobile-menu-btn" class="mobile-menu-btn">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+    
+    <!-- Mobile Navigation Drawer -->
+    <div id="mobile-nav" class="mobile-nav">
+        <a href="/#features" class="mobile-link">Features</a>
+        <a href="/#how-it-works" class="mobile-link">How It Works</a>
+        <a href="/#faq" class="mobile-link">FAQ</a>
+        {% if g.user %}
+            <a href="/dashboard" class="mobile-link">Dashboard</a>
+            <a href="/api/auth/logout" class="mobile-link">Logout</a>
+        {% else %}
+            <a href="/login" class="mobile-link">Login</a>
+            <a href="/register" class="mobile-link mobile-btn">Sign Up</a>
+        {% endif %}
+    </div>
+
+    <!-- Main Content wrapper -->
+    <main class="main-content-wrapper">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Global App Scripts -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

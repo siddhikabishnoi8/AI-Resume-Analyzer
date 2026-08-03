@@ -1,0 +1,545 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - ResumeAI{% endblock %}
+
+{% block extra_head %}
+<!-- Special styling variables can go here, but style.css will hold the bulk -->
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="dashboard-sidebar">
+        <div class="sidebar-user-info">
+            <div class="sidebar-avatar">
+                <i class="fa-solid fa-circle-user"></i>
+            </div>
+            <div class="sidebar-user-meta">
+                <h4 id="sidebar-user-name">{{ g.user.full_name }}</h4>
+                <p id="sidebar-user-email">{{ g.user.email }}</p>
+            </div>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li>
+                <a href="#overview" class="menu-item active" data-tab="overview">
+                    <i class="fa-solid fa-chart-pie"></i> <span>Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="#upload" class="menu-item" data-tab="upload">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> <span>Upload Resume</span>
+                </a>
+            </li>
+            <li>
+                <a href="#history" class="menu-item" data-tab="history">
+                    <i class="fa-solid fa-clock-rotate-left"></i> <span>Analysis History</span>
+                </a>
+            </li>
+            <li>
+                <a href="#profile" class="menu-item" data-tab="profile">
+                    <i class="fa-solid fa-user-gear"></i> <span>Profile</span>
+                </a>
+            </li>
+        </ul>
+        
+        <div class="sidebar-footer">
+            <a href="/api/auth/logout" class="logout-btn">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> <span>Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="dashboard-main-content">
+        
+        <!-- VIEW 1: OVERVIEW TAB -->
+        <section id="view-overview" class="dashboard-view active">
+            <div class="view-header">
+                <h2>Performance Overview</h2>
+                <p>Welcome back! Check your overall resume optimization statistics.</p>
+            </div>
+            
+            <!-- Stats Cards Grid -->
+            <div class="stats-cards-grid">
+                <div class="stats-card glass-card">
+                    <div class="card-icon blue-bg"><i class="fa-solid fa-gauge-high"></i></div>
+                    <div class="card-text">
+                        <span class="card-title">Average ATS Score</span>
+                        <h3 id="stat-avg-score">--</h3>
+                    </div>
+                </div>
+                
+                <div class="stats-card glass-card">
+                    <div class="card-icon green-bg"><i class="fa-solid fa-code-compare"></i></div>
+                    <div class="card-text">
+                        <span class="card-title">Resume Match Avg</span>
+                        <h3 id="stat-avg-match">--</h3>
+                    </div>
+                </div>
+                
+                <div class="stats-card glass-card">
+                    <div class="card-icon purple-bg"><i class="fa-solid fa-file-invoice"></i></div>
+                    <div class="card-text">
+                        <span class="card-title">Resumes Uploaded</span>
+                        <h3 id="stat-resume-count">--</h3>
+                    </div>
+                </div>
+                
+                <div class="stats-card glass-card">
+                    <div class="card-icon gold-bg"><i class="fa-solid fa-briefcase"></i></div>
+                    <div class="card-text">
+                        <span class="card-title">Analysis Frequency</span>
+                        <h3 id="stat-analysis-count">--</h3>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Interactive Charts Section -->
+            <div class="dashboard-charts-row">
+                <div class="chart-card glass-card">
+                    <h3>Recent ATS Scores Trends</h3>
+                    <div class="chart-container">
+                        <canvas id="atsTrendsChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card glass-card">
+                    <h3>Sub-Score Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="subScoresRadarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions Card -->
+            <div class="quick-action-banner glass-card">
+                <div class="banner-content">
+                    <h3>Analyze a New Resume</h3>
+                    <p>Compare your CV against any job description to see how it fairs and what skills are missing.</p>
+                </div>
+                <button class="btn btn-primary" onclick="switchToTab('upload')">
+                    <i class="fa-solid fa-plus"></i> Upload New
+                </button>
+            </div>
+        </section>
+
+        <!-- VIEW 2: UPLOAD RESUME TAB -->
+        <section id="view-upload" class="dashboard-view">
+            <div class="view-header">
+                <h2>Upload & Match</h2>
+                <p>Run a comparison analysis of your CV against a job description.</p>
+            </div>
+            
+            <form id="analysis-form" class="analysis-upload-form">
+                <div class="upload-split-layout">
+                    <!-- Column 1: File Uploader -->
+                    <div class="upload-column">
+                        <div class="form-group">
+                            <label class="section-label">1. Upload Resume</label>
+                            <p class="section-subtext">Supported formats: PDF and Word Document (.docx)</p>
+                            
+                            <!-- Drag & Drop Container -->
+                            <div id="drag-drop-area" class="drag-drop-container">
+                                <i class="fa-solid fa-file-arrow-up upload-box-icon"></i>
+                                <p class="drag-drop-text">Drag & drop your file here or <span>browse files</span></p>
+                                <input type="file" id="resume-file" name="resume" accept=".pdf,.docx" style="display: none;" required>
+                                
+                                <!-- File details panel -->
+                                <div id="selected-file-details" class="selected-file-panel" style="display: none;">
+                                    <i class="fa-solid fa-file-signature"></i>
+                                    <div class="file-meta">
+                                        <span class="file-name" id="display-file-name">filename.pdf</span>
+                                        <span class="file-size" id="display-file-size">140 KB</span>
+                                    </div>
+                                    <button type="button" id="remove-file-btn" class="remove-file-btn">
+                                        <i class="fa-solid fa-circle-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Column 2: Job Details -->
+                    <div class="upload-column">
+                        <div class="form-group">
+                            <label for="job-title" class="section-label">2. Target Job Title</label>
+                            <input type="text" id="job-title" name="job_title" placeholder="e.g. Senior Software Engineer" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="job-description" class="section-label">3. Job Description</label>
+                            <p class="section-subtext">Paste the full text of the job listing</p>
+                            <textarea id="job-description" name="job_description" rows="8" placeholder="Paste requirements, qualifications, and responsibilities here..." required></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Progress & Action Bar -->
+                <div class="upload-action-bar">
+                    <!-- Progress meter -->
+                    <div id="upload-progress-container" class="upload-progress-wrapper" style="display: none;">
+                        <div class="progress-info">
+                            <span>Uploading & analyzing...</span>
+                            <span id="progress-percent">0%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div id="progress-fill" class="progress-fill"></div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" id="analyze-submit-btn" class="btn btn-primary btn-lg">
+                        <i class="fa-solid fa-magnifying-glass-chart"></i> Analyze Resume
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Skeleton Loading Screen -->
+            <div id="analysis-loading-skeleton" class="skeleton-loading-overlay" style="display: none;">
+                <div class="skeleton-card glass-card">
+                    <div class="skeleton-header">
+                        <div class="skeleton-circle animate-pulse"></div>
+                        <div class="skeleton-text animate-pulse"></div>
+                    </div>
+                    <div class="skeleton-body">
+                        <div class="skeleton-line animate-pulse"></div>
+                        <div class="skeleton-line animate-pulse"></div>
+                        <div class="skeleton-line animate-pulse"></div>
+                        <div class="skeleton-line animate-pulse"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 3: ANALYSIS RESULT VIEW -->
+        <section id="view-result" class="dashboard-view">
+            <div class="result-top-controls">
+                <button class="btn btn-secondary" onclick="switchToTab('upload')">
+                    <i class="fa-solid fa-chevron-left"></i> Analyze Another
+                </button>
+                <div class="report-export-buttons">
+                    <a id="btn-print-report" target="_blank" class="btn btn-secondary">
+                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                    </a>
+                    <button id="btn-export-json" class="btn btn-secondary">
+                        <i class="fa-solid fa-download"></i> Download Analysis
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Main Result Panel Grid -->
+            <div class="results-grid">
+                
+                <!-- Score Breakdown Column -->
+                <div class="result-score-panel glass-card">
+                    <div class="ats-circular-gauge">
+                        <svg viewBox="0 0 120 120" class="gauge-svg">
+                            <circle cx="60" cy="60" r="50" fill="none" stroke="var(--border-color)" stroke-width="8"></circle>
+                            <circle id="result-gauge-fill" cx="60" cy="60" r="50" fill="none" stroke="var(--primary-color)" stroke-width="8" stroke-dasharray="314" stroke-dashoffset="314" stroke-linecap="round"></circle>
+                        </svg>
+                        <div class="gauge-score-value">
+                            <span id="result-ats-score">0%</span>
+                            <span class="subtext">ATS Score</span>
+                        </div>
+                    </div>
+                    
+                    <div class="sub-score-meters">
+                        <div class="score-meter-item">
+                            <div class="meter-info">
+                                <span>Resume Match (20%)</span>
+                                <span id="meter-match-val">0%</span>
+                            </div>
+                            <div class="meter-track"><div id="meter-match-fill" class="meter-fill"></div></div>
+                        </div>
+                        
+                        <div class="score-meter-item">
+                            <div class="meter-info">
+                                <span>Skill Match (40%)</span>
+                                <span id="meter-skills-val">0%</span>
+                            </div>
+                            <div class="meter-track"><div id="meter-skills-fill" class="meter-fill"></div></div>
+                        </div>
+                        
+                        <div class="score-meter-item">
+                            <div class="meter-info">
+                                <span>Keyword Match (20%)</span>
+                                <span id="meter-keywords-val">0%</span>
+                            </div>
+                            <div class="meter-track"><div id="meter-keywords-fill" class="meter-fill"></div></div>
+                        </div>
+                        
+                        <div class="score-meter-item">
+                            <div class="meter-info">
+                                <span>Experience (20%)</span>
+                                <span id="meter-exp-val">0%</span>
+                            </div>
+                            <div class="meter-track"><div id="meter-exp-fill" class="meter-fill"></div></div>
+                        </div>
+                        
+                        <div class="score-meter-item">
+                            <div class="meter-info">
+                                <span>Education (10%)</span>
+                                <span id="meter-edu-val">0%</span>
+                            </div>
+                            <div class="meter-track"><div id="meter-edu-fill" class="meter-fill"></div></div>
+                        </div>
+                        
+                        <div class="score-meter-item">
+                            <div class="meter-info">
+                                <span>Formatting Audit (10%)</span>
+                                <span id="meter-fmt-val">0%</span>
+                            </div>
+                            <div class="meter-track"><div id="meter-fmt-fill" class="meter-fill"></div></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Detailed Info Columns -->
+                <div class="result-details-panel">
+                    
+                    <!-- Card 1: Resume Overview & Extracted Data -->
+                    <div class="detail-card glass-card">
+                        <div class="card-header">
+                            <i class="fa-solid fa-address-card"></i>
+                            <h3>Resume Overview & Extracted Information</h3>
+                        </div>
+                        <div class="overview-details-grid">
+                            <div class="overview-item">
+                                <span class="label">Name</span>
+                                <span class="value" id="res-name">--</span>
+                            </div>
+                            <div class="overview-item">
+                                <span class="label">Email</span>
+                                <span class="value" id="res-email">--</span>
+                            </div>
+                            <div class="overview-item">
+                                <span class="label">Phone</span>
+                                <span class="value" id="res-phone">--</span>
+                            </div>
+                            <div class="overview-item">
+                                <span class="label">Experience Years</span>
+                                <span class="value" id="res-years">--</span>
+                            </div>
+                            <div class="overview-item">
+                                <span class="label">Education Degrees</span>
+                                <span class="value" id="res-education">--</span>
+                            </div>
+                            <div class="overview-item">
+                                <span class="label">GitHub</span>
+                                <span class="value" id="res-github">--</span>
+                            </div>
+                            <div class="overview-item" style="grid-column: span 2;">
+                                <span class="label">Skills Cataloged</span>
+                                <span class="value" id="res-skills-count">--</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Card 2: Skill Match Breakdown -->
+                    <div class="detail-card glass-card">
+                        <div class="card-header">
+                            <i class="fa-solid fa-list-check"></i>
+                            <h3>Skill Match Analysis</h3>
+                        </div>
+                        
+                        <div class="skills-match-lists">
+                            <div class="skills-sub-list">
+                                <span class="list-heading text-green"><i class="fa-solid fa-circle-check"></i> Matched Skills</span>
+                                <ul id="list-matched-skills" class="skills-badge-list">
+                                    <!-- Dynamic li tags -->
+                                </ul>
+                            </div>
+                            
+                            <div class="skills-sub-list">
+                                <span class="list-heading text-red"><i class="fa-solid fa-circle-xmark"></i> Missing Skills</span>
+                                <ul id="list-missing-skills" class="skills-badge-list">
+                                    <!-- Dynamic li tags -->
+                                </ul>
+                            </div>
+                            
+                            <div class="skills-sub-list">
+                                <span class="list-heading text-purple"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Recommended Skills</span>
+                                <ul id="list-recommended-skills" class="skills-badge-list">
+                                    <!-- Dynamic li tags -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Card 3: Keyword & Experience & Education Alignments -->
+                    <div class="detail-card glass-card">
+                        <div class="card-header">
+                            <i class="fa-solid fa-chart-simple"></i>
+                            <h3>Keyword & Alignment Audits</h3>
+                        </div>
+                        
+                        <div class="audits-grid">
+                            <div class="audit-block">
+                                <h4>Keyword Analysis</h4>
+                                <div class="audit-meta">
+                                    <div class="meta-row">
+                                        <span>Top JD Keywords:</span>
+                                        <span id="audit-top-kw" class="text-bold">--</span>
+                                    </div>
+                                    <div class="meta-row">
+                                        <span>Repeated (Stuffing):</span>
+                                        <span id="audit-repeated-kw" class="text-bold">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="audit-block">
+                                <h4>Experience Check</h4>
+                                <div class="audit-meta">
+                                    <div class="meta-row">
+                                        <span>JD Required Years:</span>
+                                        <span id="audit-req-exp" class="text-bold">--</span>
+                                    </div>
+                                    <div class="meta-row">
+                                        <span>Match Level:</span>
+                                        <span id="audit-exp-status" class="status-badge">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="audit-block">
+                                <h4>Education Check</h4>
+                                <div class="audit-meta">
+                                    <div class="meta-row">
+                                        <span>JD Required Degree:</span>
+                                        <span id="audit-req-edu" class="text-bold">--</span>
+                                    </div>
+                                    <div class="meta-row">
+                                        <span>Match Level:</span>
+                                        <span id="audit-edu-status" class="status-badge">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Card 4: Formatting checklist -->
+                    <div class="detail-card glass-card">
+                        <div class="card-header">
+                            <i class="fa-solid fa-scissors"></i>
+                            <h3>Resume Formatting Audit</h3>
+                        </div>
+                        <div class="formatting-checklist-grid" id="formatting-checklist">
+                            <!-- Dynamic items -->
+                        </div>
+                    </div>
+                    
+                    <!-- Card 5: ATS Optimization Suggestions -->
+                    <div class="detail-card glass-card">
+                        <div class="card-header text-purple">
+                            <i class="fa-solid fa-lightbulb"></i>
+                            <h3>ATS Optimization Suggestions</h3>
+                        </div>
+                        <div class="suggestions-cards-container" id="suggestions-container">
+                            <!-- Dynamic Suggestion Cards -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 4: ANALYSIS HISTORY TAB -->
+        <section id="view-history" class="dashboard-view">
+            <div class="view-header flex-header">
+                <div>
+                    <h2>Analysis History</h2>
+                    <p>Search and manage your previous resume scans.</p>
+                </div>
+                
+                <!-- Search bar -->
+                <div class="search-input-wrapper">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="history-search-input" placeholder="Search by resume name or job title...">
+                </div>
+            </div>
+            
+            <div class="history-table-container glass-card">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Resume Name</th>
+                            <th>Job Title</th>
+                            <th>Date</th>
+                            <th>ATS Score</th>
+                            <th>Match %</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table-body">
+                        <!-- Dynamic Rows -->
+                        <tr>
+                            <td colspan="6" class="table-empty-state">Loading history...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- VIEW 5: PROFILE TAB -->
+        <section id="view-profile" class="dashboard-view">
+            <div class="view-header">
+                <h2>Account Settings</h2>
+                <p>Manage your login credentials and view your overall system metrics.</p>
+            </div>
+            
+            <div class="profile-split-layout">
+                <!-- Column 1: Info & Stats -->
+                <div class="profile-column glass-card">
+                    <div class="profile-summary">
+                        <div class="profile-avatar-large">
+                            <i class="fa-solid fa-circle-user"></i>
+                        </div>
+                        <h3 id="profile-name-display">--</h3>
+                        <p id="profile-email-display">--</p>
+                        <span id="profile-joined-display" class="profile-badge">Joined --</span>
+                    </div>
+                    
+                    <div class="profile-stats-details">
+                        <div class="profile-stat-box">
+                            <span class="number" id="profile-count-resumes">0</span>
+                            <span class="label">Total Analyses</span>
+                        </div>
+                        <div class="profile-stat-box">
+                            <span class="number" id="profile-avg-score-display">0%</span>
+                            <span class="label">Avg Score</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Column 2: Password Reset -->
+                <div class="profile-column glass-card">
+                    <h3>Update Password</h3>
+                    <form id="password-reset-form" class="profile-form">
+                        <div class="form-group">
+                            <label for="current_password">Current Password</label>
+                            <input type="password" id="current_password" name="current_password" placeholder="••••••••" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new_password">New Password</label>
+                            <input type="password" id="new_password" name="new_password" placeholder="Min. 8 characters" minlength="8" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm_new_password">Confirm New Password</label>
+                            <input type="password" id="confirm_new_password" name="confirm_new_password" placeholder="Confirm new password" minlength="8" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-key"></i> Update Password
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+        
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
