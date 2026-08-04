@@ -1,4 +1,4 @@
-pip install -r requirements.txtimport os
+import os
 from flask import Flask, request, jsonify, render_template, redirect, url_for, session, g
 from werkzeug.utils import secure_filename
 from config import Config
