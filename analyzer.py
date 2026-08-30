@@ -4,8 +4,6 @@ import spacy
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 from parser import parse_contact_info, parse_education, parse_experience
 
 # Downloader helper
@@ -155,16 +153,75 @@ def clean_and_tokenize(text):
         return " ".join(words)
 
 def calculate_similarity(resume_cleaned, job_cleaned):
-    """Calculate TF-IDF Cosine Similarity between cleaned texts."""
+    """Calculate TF-IDF cosine similarity without scikit-learn."""
     if not resume_cleaned or not job_cleaned:
         return 0
+
     try:
-        vectorizer = TfidfVectorizer()
-        tfidf = vectorizer.fit_transform([resume_cleaned, job_cleaned])
-        sim = cosine_similarity(tfidf[0:1], tfidf[1:2])[0][0]
-        return int(sim * 100)
+        from collections import Counter
+        import math
+
+        resume_words = resume_cleaned.split()
+        job_words = job_cleaned.split()
+
+        documents = [resume_words, job_words]
+
+        # Create vocabulary
+        vocabulary = set(resume_words + job_words)
+
+        if not vocabulary:
+            return 0
+
+        # Calculate TF-IDF vectors
+        vectors = []
+
+        for document in documents:
+            word_count = Counter(document)
+            total_words = len(document)
+
+            vector = []
+
+            for word in vocabulary:
+                # Term Frequency
+                tf = word_count[word] / total_words if total_words else 0
+
+                # Inverse Document Frequency
+                document_frequency = sum(
+                    1 for doc in documents if word in doc
+                )
+
+                idf = math.log(
+                    len(documents) / document_frequency
+                ) + 1
+
+                vector.append(tf * idf)
+
+            vectors.append(vector)
+
+        # Cosine similarity
+        dot_product = sum(
+            a * b for a, b in zip(vectors[0], vectors[1])
+        )
+
+        magnitude_resume = math.sqrt(
+            sum(x * x for x in vectors[0])
+        )
+
+        magnitude_job = math.sqrt(
+            sum(x * x for x in vectors[1])
+        )
+
+        if magnitude_resume == 0 or magnitude_job == 0:
+            return 0
+
+        similarity = dot_product / (
+            magnitude_resume * magnitude_job
+        )
+
+        return int(similarity * 100)
+
     except Exception as e:
-        print(f"Cosine similarity calculation failed: {e}")
+        print(f"Similarity calculation failed: {e}")
         return 0
 
 def extract_skills_from_text(text):

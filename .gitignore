@@ -1,8 +1,9 @@
 venv/
-__pycache__/
 *.pyc
-.env
-uploads/
-*.db
+__pycache__/
+resume_analyzer.db
+uploads/user_*
+instance/
 .DS_Store
 .vscode/
+.idea/
